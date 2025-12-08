@@ -13,8 +13,8 @@ WITH restaurants AS (
         street,
         zipcode,
         phone,
-        cuisine_description   -- change to `cuisine` if that's your column name
-    FROM {{ ref('raw_dohmh') }}   -- or whatever your DOHMH raw model is named
+        cuisine_description   
+    FROM {{ ref('raw_dohmh') }} 
     WHERE camis IS NOT NULL
 )
 

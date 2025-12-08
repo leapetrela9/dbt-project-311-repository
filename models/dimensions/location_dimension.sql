@@ -1,8 +1,6 @@
 {{ config(materialized='table') }}
 
--- ===========================================
--- 1. Extract location fields from 311 dataset
--- ===========================================
+--311 dataset
 WITH from_311 AS (
 
     SELECT DISTINCT
@@ -17,10 +15,7 @@ WITH from_311 AS (
       AND latitude IS NOT NULL
       AND longitude IS NOT NULL
 ),
-
--- ===========================================
--- 2. Extract location fields from DOHMH dataset
--- ===========================================
+--DOHMH dataset
 from_dohmh AS (
 
     SELECT DISTINCT
@@ -36,9 +31,6 @@ from_dohmh AS (
       AND longitude IS NOT NULL
 ),
 
--- ===========================================
--- 3. UNION the datasets into a shared location set
--- ===========================================
 locations AS (
 
     SELECT DISTINCT
@@ -60,9 +52,7 @@ locations AS (
     FROM from_dohmh
 )
 
--- ===========================================
--- 4. Generate Location Dimension with PK
--- ===========================================
+--Location Dimension primary key
 SELECT
     ROW_NUMBER() OVER(
         ORDER BY borough, zipcode, community_board, latitude, longitude

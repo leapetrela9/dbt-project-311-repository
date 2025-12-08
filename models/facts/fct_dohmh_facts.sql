@@ -1,15 +1,53 @@
-{{ config(materialized='table') }}
+{{
+    config(
+        materialized = 'table'
+    )
+}}
 
-WITH source AS (
+with restaurant_dimension as (
+    select *
+    from {{ ref('restaurant_dimension') }}
+),
 
-    SELECT
+violation_dimension as (
+    select *
+    from {{ ref('violation_dimension') }}
+),
+
+cuisine_dimension as (
+    select *
+    from {{ ref('cuisine_dimension') }}
+),
+
+action_dimension as (
+    select *
+    from {{ ref('action_dimension') }}
+),
+
+location_dimension as (
+    select *
+    from {{ ref('location_dimension') }}
+),
+
+date_dimension as (
+    select *
+    from {{ ref('date_dimension') }}
+),
+
+all_inspections as (
+    select
         camis,
-        dba AS restaurant_name,
-        boro AS borough,
+        dba,
+        boro              as borough,
         building,
         street,
         zipcode,
-        phone,
+        community_board,
+        council_district,
+        census_tract,
+        latitude,
+        longitude,
+
         cuisine_description,
         inspection_date,
         action,
@@ -20,78 +58,51 @@ WITH source AS (
         grade,
         grade_date,
         record_date,
-        inspection_type,
-        latitude,
-        longitude
-    FROM {{ ref('raw_dohmh') }}
-    WHERE inspection_date IS NOT NULL
-
-),
-
--- ======================================================
--- 1. Map inspection_date to Date Dimension
--- ======================================================
-date_join AS (
-
-    SELECT
-        s.*,
-        d.date_dim_id AS inspection_date_dim_id
-    FROM source s
-    LEFT JOIN {{ ref('date_dimension') }} d
-        ON DATE(s.inspection_date) = d.date_value
-),
-
--- ======================================================
--- 2. Map borough/zipcode/lat/long to Location Dimension
--- ======================================================
-location_join AS (
-
-    SELECT
-        dj.*,
-        ld.location_dim_id
-    FROM date_join dj
-    LEFT JOIN {{ ref('location_dimension') }} ld
-        ON dj.borough = ld.borough
-       AND dj.zipcode = ld.zipcode
-       AND dj.latitude = ld.latitude
-       AND dj.longitude = ld.longitude
+        inspection_type
+    from {{ ref('raw_dohmh') }}
 )
 
--- ======================================================
--- 3. Final Fact Table
--- ======================================================
-SELECT
-    -- Fact PK (surrogate)
-    ROW_NUMBER() OVER (ORDER BY camis, inspection_date) AS inspection_fact_id,
+select
+    rd.restaurant_dim_id,
+    ld.location_dim_id,
+    vd.violation_dim_id,
+    cd.cuisine_dim_id,
+    ad.action_dim_id,
+    dd_inspection.date_dim_id as inspection_date_dim_id,
 
-    -- Foreign Keys
-    location_dim_id,
-    inspection_date_dim_id,
+    -- measures
+    1          as inspection_count,
+    ai.score   as inspection_score,
+    ai.grade   as inspection_grade,
+    ai.critical_flag,
+    ai.inspection_type
 
-    -- Natural Keys
-    camis,
-    restaurant_name,
+from all_inspections ai
 
-    -- Measures
-    score,
-    CASE 
-        WHEN critical_flag = 'Y' THEN 1 
-        ELSE 0 
-    END AS is_critical_violation,
+-- restaurant dimension (join on business key CAMIS; add dba if you want stricter join)
+join restaurant_dimension rd
+  using (camis)
 
-    -- Descriptive Fields
-    borough,
-    building,
-    street,
-    zipcode,
-    cuisine_description,
-    action,
-    violation_code,
-    violation_description,
-    critical_flag,
-    grade,
-    inspection_type,
-    grade_date,
-    record_date
+-- shared location dimension
+join location_dimension ld
+  using (borough,
+         zipcode,
+         community_board,
+         latitude,
+         longitude)
 
-FROM location_join;
+-- violation dimension
+join violation_dimension vd
+  using (violation_code, violation_description)
+
+-- cuisine dimension
+join cuisine_dimension cd
+  using (cuisine_description)
+
+-- action dimension
+join action_dimension ad
+  using (action)
+
+-- date dimension on inspection_date
+join date_dimension dd_inspection
+  on extract(date from ai.inspection_date) = dd_inspection.full_date
