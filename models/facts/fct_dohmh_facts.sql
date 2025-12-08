@@ -70,39 +70,34 @@ select
     ad.action_dim_id,
     dd_inspection.date_dim_id as inspection_date_dim_id,
 
-    -- measures
-    1          as inspection_count,
-    ai.score   as inspection_score,
-    ai.grade   as inspection_grade,
+    1            as inspection_count,
+    ai.score     as inspection_score,
+    ai.grade     as inspection_grade,
     ai.critical_flag,
     ai.inspection_type
 
 from all_inspections ai
 
--- restaurant dimension (join on business key CAMIS; add dba if you want stricter join)
 join restaurant_dimension rd
   using (camis)
 
--- shared location dimension
 join location_dimension ld
-  using (borough,
-         zipcode,
-         community_board,
-         latitude,
-         longitude)
+  using (
+      borough,
+      zipcode,
+      community_board,
+      latitude,
+      longitude
+  )
 
--- violation dimension
 join violation_dimension vd
   using (violation_code, violation_description)
 
--- cuisine dimension
 join cuisine_dimension cd
   using (cuisine_description)
 
--- action dimension
 join action_dimension ad
   using (action)
 
--- date dimension on inspection_date
 join date_dimension dd_inspection
   on extract(date from ai.inspection_date) = dd_inspection.full_date
