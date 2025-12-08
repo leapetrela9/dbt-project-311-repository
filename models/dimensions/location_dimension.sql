@@ -1,97 +1,76 @@
 {{ config(materialized='table') }}
 
-with from_311 as (
+-- ===========================================
+-- 1. Extract location fields from 311 dataset
+-- ===========================================
+WITH from_311 AS (
 
-    select distinct
-        bbl,
+    SELECT DISTINCT
         borough,
-        cast(incident_zip      as string) as zipcode,
-        cast(community_board   as string) as community_board,
-        cast(council_district  as string) as council_district,
-        cast(census_tract      as string) as census_tract,
+        incident_zip AS zipcode,
+        CAST(community_board AS STRING) AS community_board,
         latitude,
         longitude
-    from {{ ref('raw_311_complaints') }}
-    where borough      is not null
-      and incident_zip is not null
-      and latitude     is not null
-      and longitude    is not null
-
+    FROM {{ ref('raw_311_complaints') }}
+    WHERE borough IS NOT NULL
+      AND incident_zip IS NOT NULL
+      AND latitude IS NOT NULL
+      AND longitude IS NOT NULL
 ),
 
-from_dohmh as (
+-- ===========================================
+-- 2. Extract location fields from DOHMH dataset
+-- ===========================================
+from_dohmh AS (
 
-    select distinct
-        bbl,
-        boro                         as borough,
-        cast(zipcode          as string) as zipcode,
-        cast(community_board  as string) as community_board,
-        cast(council_district as string) as council_district,
-        cast(census_tract     as string) as census_tract,
+    SELECT DISTINCT
+        boro AS borough,
+        zipcode,
+        CAST(NULL AS STRING) AS community_board,   -- ensure same type
         latitude,
         longitude
-    from {{ ref('raw_dohmh') }}
-    where boro     is not null
-      and zipcode  is not null
-      and latitude is not null
-      and longitude is not null
-
+    FROM {{ ref('raw_dohmh') }}
+    WHERE boro IS NOT NULL
+      AND zipcode IS NOT NULL
+      AND latitude IS NOT NULL
+      AND longitude IS NOT NULL
 ),
 
-locations as (
+-- ===========================================
+-- 3. UNION the datasets into a shared location set
+-- ===========================================
+locations AS (
 
-    select
-        bbl,
+    SELECT DISTINCT
         borough,
         zipcode,
         community_board,
-        council_district,
-        census_tract,
         latitude,
         longitude
-    from from_311
+    FROM from_311
 
-    union distinct
+    UNION DISTINCT
 
-    select
-        bbl,
+    SELECT DISTINCT
         borough,
         zipcode,
         community_board,
-        council_district,
-        census_tract,
         latitude,
         longitude
-    from from_dohmh
+    FROM from_dohmh
 )
 
-select
-    row_number() over (
-        order by
-            borough,
-            zipcode,
-            community_board,
-            council_district,
-            census_tract,
-            bbl,
-            latitude,
-            longitude
-    ) as location_dim_id,
-    bbl,
+-- ===========================================
+-- 4. Generate Location Dimension with PK
+-- ===========================================
+SELECT
+    ROW_NUMBER() OVER(
+        ORDER BY borough, zipcode, community_board, latitude, longitude
+    ) AS location_dim_id,
     borough,
     zipcode,
     community_board,
-    council_district,
-    census_tract,
     latitude,
     longitude
-from locations
-order by
-    borough,
-    zipcode,
-    community_board,
-    council_district,
-    census_tract,
-    bbl,
-    latitude,
-    longitude
+FROM locations
+ORDER BY borough, zipcode, community_board, latitude, longitude
