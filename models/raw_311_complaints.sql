@@ -16,7 +16,8 @@ SELECT
     location,
     status,
     community_board,
-    open_data_channel_type
+    open_data_channel_type,
+    resolution_description
 FROM `theta-mile-479604-h9.nyc_food_safety_raw.complaints_2020`
 
 UNION ALL
@@ -39,7 +40,8 @@ SELECT
     location,
     status,
     community_board,
-    open_data_channel_type
+    open_data_channel_type,
+    resolution_description
 FROM `theta-mile-479604-h9.nyc_food_safety_raw.complaints_2021`
 
 UNION ALL
@@ -62,7 +64,8 @@ SELECT
     location,
     status,
     community_board,
-    open_data_channel_type
+    open_data_channel_type,
+    resolution_description
 FROM `theta-mile-479604-h9.nyc_food_safety_raw.complaints_2022`
 
 UNION ALL
@@ -85,7 +88,8 @@ SELECT
     location,
     status,
     community_board,
-    open_data_channel_type
+    open_data_channel_type,
+    resolution_description
 FROM `theta-mile-479604-h9.nyc_food_safety_raw.complaints_2023`
 
 UNION ALL
@@ -108,7 +112,8 @@ SELECT
     location,
     status,
     community_board,
-    open_data_channel_type
+    open_data_channel_type,
+    resolution_description
 FROM `theta-mile-479604-h9.nyc_food_safety_raw.complaints_2024`
 
 UNION ALL
@@ -131,5 +136,6 @@ SELECT
     location,
     status,
     community_board,
-    open_data_channel_type
+    open_data_channel_type,
+    resolution_description
 FROM `theta-mile-479604-h9.nyc_food_safety_raw.complaints_2025`
