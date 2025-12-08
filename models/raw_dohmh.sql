@@ -97,30 +97,6 @@ WITH union_dohmh AS
         grade_date,
         record_date,
         inspection_type
-    FROM `theta-mile-479604-h9.nyc_food_safety_raw.dohmh_2023`
-    WHERE camis != 'CAMIS'
-
-    UNION ALL
-
-    SELECT
-        camis,
-        dba,
-        boro,
-        building,
-        street,
-        zipcode,
-        phone,
-        cuisine_description,
-        inspection_date,
-        action,
-        violation_code,
-        violation_description,
-        critical_flag,
-        score,
-        grade,
-        grade_date,
-        record_date,
-        inspection_type
     FROM `theta-mile-479604-h9.nyc_food_safety_raw.dohmh_2024`
     WHERE camis != 'CAMIS'
 
