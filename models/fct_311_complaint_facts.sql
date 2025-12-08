@@ -29,7 +29,6 @@ date_dimension AS (
     FROM {{ ref('date_dimension') }}
 ),
 
--- Normalize raw complaints to match dim natural keys
 all_complaints AS (
     SELECT
         unique_key,
@@ -48,8 +47,6 @@ all_complaints AS (
 )
 
 SELECT
-    -- Optional surrogate PK if you want one:
-    -- ROW_NUMBER() OVER (ORDER BY ac.unique_key) AS complaint_fact_id,
 
     ad.agency_dim_id,
     ctd.complaint_type_dim_id,
@@ -62,22 +59,17 @@ SELECT
 
 FROM all_complaints ac
 
--- matches agency_dimension (agency_name only)
 INNER JOIN agency_dimension ad
     USING (agency_name)
 
--- matches complaint_type_dimension (complaint_type, descriptor)
 INNER JOIN complaint_type_dimension ctd
     USING (complaint_type, descriptor)
 
--- matches location_dimension (borough, zipcode, community_board, latitude, longitude)
 INNER JOIN location_dimension ld
     USING (borough, zipcode, community_board, latitude, longitude)
 
--- matches status_dimension (status, resolution_description)
 INNER JOIN status_dimension sd
     USING (status, resolution_description)
 
--- Date dimension (created_date only for now)
 INNER JOIN date_dimension dd_created
     ON EXTRACT(DATE FROM ac.created_date) = dd_created.full_date
