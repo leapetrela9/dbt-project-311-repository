@@ -1,0 +1,6 @@
+name: CIS_4400_Fall_2025_Project
+version: 1.0.0
+profile: Bigquery
+models:
+  CIS_4400_Fall_2025_Project:
+    +materialized: table
