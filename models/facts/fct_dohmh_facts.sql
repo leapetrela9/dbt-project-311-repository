@@ -7,7 +7,7 @@ WITH source AS (
         boro AS borough,
         building,
         street,
-        zipcode,
+        CAST(zipcode AS STRING) AS zipcode,
         phone,
         cuisine_description,
         inspection_date,
