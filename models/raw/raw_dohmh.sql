@@ -16,7 +16,9 @@ SELECT
     grade,
     grade_date,
     record_date,
-    inspection_type
+    inspection_type,
+    latitude,
+    longitude
 FROM `theta-mile-479604-h9.nyc_food_safety_raw.dohmh_2020`
 
 UNION ALL
@@ -39,5 +41,7 @@ SELECT
     grade,
     grade_date,
     record_date,
-    inspection_type
+    inspection_type,
+    latitude,
+    longitude
 FROM `theta-mile-479604-h9.nyc_food_safety_raw.dohmh_2021`
