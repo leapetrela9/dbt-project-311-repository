@@ -20,7 +20,6 @@ WITH source AS (
         record_date,
         inspection_type,
 
-        -- ✅ standardize coordinates (same as restaurant_dim + complaint facts)
         TRUNC(CAST(latitude AS FLOAT64), 4)  AS latitude,
         TRUNC(CAST(longitude AS FLOAT64), 4) AS longitude
 
@@ -91,7 +90,7 @@ violation_join AS (
 SELECT
     ROW_NUMBER() OVER (ORDER BY camis, inspection_date) AS dohmh_fact_id,
     restaurant_dim_id,
-    location_key,              -- ✅ changed (was location_dim_id)
+    location_key,
     cuisine_dim_id,
     action_dim_id,
     violation_dim_id,
@@ -109,7 +108,19 @@ SELECT
     violation_code,
     violation_description,
     critical_flag,
+
     grade,
+
+    -- ✅ NEW: fill missing grade based on score thresholds
+    COALESCE(
+        grade,
+        CASE
+            WHEN score BETWEEN 0 AND 13 THEN 'A'
+            WHEN score BETWEEN 14 AND 27 THEN 'B'
+            WHEN score >= 28 THEN 'C'
+        END
+    ) AS grade_final,
+
     inspection_type,
     grade_date,
     record_date
