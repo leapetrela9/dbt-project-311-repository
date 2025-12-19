@@ -21,8 +21,8 @@ WITH source AS (
         inspection_type,
 
         -- ✅ standardize coordinates (same as restaurant_dim + complaint facts)
-        TRUNC(CAST(latitude AS FLOAT64), 4)  AS latitude,
-        TRUNC(CAST(longitude AS FLOAT64), 4) AS longitude
+        TRUNC(CAST(latitude AS FLOAT64), 5)  AS latitude,
+        TRUNC(CAST(longitude AS FLOAT64), 5) AS longitude
 
     FROM {{ ref('raw_dohmh') }}
     WHERE inspection_date IS NOT NULL

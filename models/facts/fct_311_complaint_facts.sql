@@ -33,8 +33,8 @@ all_complaints AS (
         descriptor,
 
         -- ✅ TRUNC (not ROUND) so it matches restaurants
-        TRUNC(CAST(latitude AS FLOAT64), 4)  AS latitude,
-        TRUNC(CAST(longitude AS FLOAT64), 4) AS longitude,
+        TRUNC(CAST(latitude AS FLOAT64), 5)  AS latitude,
+        TRUNC(CAST(longitude AS FLOAT64), 5) AS longitude,
 
         status,
         resolution_description
