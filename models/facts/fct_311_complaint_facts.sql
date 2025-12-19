@@ -37,22 +37,26 @@ all_complaints AS (
         complaint_type,
         descriptor,
         borough,
-        incident_zip      AS zipcode,
-        community_board,
-        latitude,
-        longitude,
+        incident_zip AS zipcode,
+        CAST(community_board AS STRING) AS community_board,
+        ROUND(CAST(latitude AS FLOAT64), 4) AS latitude,
+        ROUND(CAST(longitude AS FLOAT64), 4) AS longitude,
         status,
         resolution_description
     FROM {{ ref('raw_311_complaints') }}
+    WHERE borough IS NOT NULL
+      AND incident_zip IS NOT NULL
+      AND latitude IS NOT NULL
+      AND longitude IS NOT NULL
 )
 
 SELECT
-
     ad.agency_dim_id,
     ctd.complaint_type_dim_id,
-    ld.location_dim_id,
-    sd.status_dim_id,
 
+    ld.location_key,
+
+    sd.status_dim_id,
     dd_created.date_dim_id AS created_date_dim_id,
 
     1 AS complaint_count
@@ -65,8 +69,13 @@ INNER JOIN agency_dimension ad
 INNER JOIN complaint_type_dimension ctd
     USING (complaint_type, descriptor)
 
+
 INNER JOIN location_dimension ld
-    USING (borough, zipcode, community_board, latitude, longitude)
+    ON ac.borough = ld.borough
+   AND ac.zipcode = ld.zipcode
+   AND ac.community_board = ld.community_board
+   AND ac.latitude = ld.latitude
+   AND ac.longitude = ld.longitude
 
 INNER JOIN status_dimension sd
     USING (status, resolution_description)
