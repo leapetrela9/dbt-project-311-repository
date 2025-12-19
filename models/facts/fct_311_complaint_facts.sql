@@ -14,11 +14,6 @@ complaint_type_dimension AS (
     FROM {{ ref('complaint_type_dimension') }}
 ),
 
-location_dimension AS (
-    SELECT * 
-    FROM {{ ref('location_dimension') }}
-),
-
 status_dimension AS (
     SELECT * 
     FROM {{ ref('status_dimension') }}
@@ -36,19 +31,30 @@ all_complaints AS (
         agency_name,
         complaint_type,
         descriptor,
-        ROUND(CAST(latitude AS FLOAT64), 4) AS latitude,
-        ROUND(CAST(longitude AS FLOAT64), 4) AS longitude,
+
+        -- ✅ TRUNC (not ROUND) so it matches restaurants
+        TRUNC(CAST(latitude AS FLOAT64), 4)  AS latitude,
+        TRUNC(CAST(longitude AS FLOAT64), 4) AS longitude,
+
         status,
         resolution_description
     FROM {{ ref('raw_311_complaints') }}
     WHERE latitude IS NOT NULL
       AND longitude IS NOT NULL
+      AND CAST(latitude AS FLOAT64) != 0
+      AND CAST(longitude AS FLOAT64) != 0
 )
 
 SELECT
     ad.agency_dim_id,
     ctd.complaint_type_dim_id,
-    ld.location_key,
+
+    -- ✅ build the SAME key as restaurant_dimension
+    TO_HEX(MD5(CONCAT(
+        CAST(ac.latitude AS STRING), '|',
+        CAST(ac.longitude AS STRING)
+    ))) AS location_key,
+
     sd.status_dim_id,
     dd_created.date_dim_id AS created_date_dim_id,
     1 AS complaint_count
@@ -60,10 +66,6 @@ INNER JOIN agency_dimension ad
 
 INNER JOIN complaint_type_dimension ctd
     USING (complaint_type, descriptor)
-
-INNER JOIN location_dimension ld
-    ON ac.latitude = ld.latitude
-   AND ac.longitude = ld.longitude
 
 INNER JOIN status_dimension sd
     USING (status, resolution_description)

@@ -19,10 +19,17 @@ WITH source AS (
         grade_date,
         record_date,
         inspection_type,
-        latitude,
-        longitude
+
+        -- ✅ standardize coordinates (same as restaurant_dim + complaint facts)
+        TRUNC(CAST(latitude AS FLOAT64), 4)  AS latitude,
+        TRUNC(CAST(longitude AS FLOAT64), 4) AS longitude
+
     FROM {{ ref('raw_dohmh') }}
     WHERE inspection_date IS NOT NULL
+      AND latitude IS NOT NULL
+      AND longitude IS NOT NULL
+      AND CAST(latitude AS FLOAT64) != 0
+      AND CAST(longitude AS FLOAT64) != 0
 ),
 
 date_join AS (
@@ -37,12 +44,10 @@ date_join AS (
 location_join AS (
     SELECT
         dj.*,
-        ld.location_dim_id
+        ld.location_key
     FROM date_join dj
     LEFT JOIN {{ ref('location_dimension') }} ld
-        ON dj.borough   = ld.borough
-       AND dj.zipcode   = ld.zipcode
-       AND dj.latitude  = ld.latitude
+        ON dj.latitude  = ld.latitude
        AND dj.longitude = ld.longitude
 ),
 
@@ -86,7 +91,7 @@ violation_join AS (
 SELECT
     ROW_NUMBER() OVER (ORDER BY camis, inspection_date) AS dohmh_fact_id,
     restaurant_dim_id,
-    location_dim_id,
+    location_key,              -- ✅ changed (was location_dim_id)
     cuisine_dim_id,
     action_dim_id,
     violation_dim_id,

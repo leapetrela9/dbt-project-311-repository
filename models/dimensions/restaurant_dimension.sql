@@ -13,12 +13,17 @@ WITH restaurants AS (
         street,
         zipcode,
         cuisine_description,
-        ROUND(CAST(latitude AS FLOAT64), 4)  AS latitude,
-        ROUND(CAST(longitude AS FLOAT64), 4) AS longitude
+
+        -- ✅ TRUNC to match complaint facts
+        TRUNC(CAST(latitude AS FLOAT64), 4)  AS latitude,
+        TRUNC(CAST(longitude AS FLOAT64), 4) AS longitude
+
     FROM {{ ref('raw_dohmh') }}
     WHERE camis IS NOT NULL
       AND latitude IS NOT NULL
       AND longitude IS NOT NULL
+      AND CAST(latitude AS FLOAT64) != 0
+      AND CAST(longitude AS FLOAT64) != 0
 )
 
 SELECT
@@ -34,7 +39,7 @@ SELECT
     latitude,
     longitude,
 
-  
+    -- ✅ exact same key logic as complaint facts
     TO_HEX(MD5(CONCAT(
         CAST(latitude AS STRING), '|',
         CAST(longitude AS STRING)
