@@ -8,7 +8,6 @@ WITH source AS (
         building,
         street,
         zipcode,
-        phone,
         cuisine_description,
         inspection_date,
         action,
