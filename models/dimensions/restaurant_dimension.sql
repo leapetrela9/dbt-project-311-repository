@@ -15,8 +15,8 @@ WITH restaurants AS (
         cuisine_description,
 
         -- ✅ TRUNC to match complaint facts
-        TRUNC(CAST(latitude AS FLOAT64), 5)  AS latitude,
-        TRUNC(CAST(longitude AS FLOAT64), 5) AS longitude
+        TRUNC(CAST(latitude AS FLOAT64), 4)  AS latitude,
+        TRUNC(CAST(longitude AS FLOAT64), 4) AS longitude
 
     FROM {{ ref('raw_dohmh') }}
     WHERE camis IS NOT NULL
