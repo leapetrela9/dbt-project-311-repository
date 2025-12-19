@@ -12,9 +12,13 @@ WITH restaurants AS (
         building,
         street,
         zipcode,
-        cuisine_description   
-    FROM {{ ref('raw_dohmh') }} 
+        cuisine_description,
+        ROUND(CAST(latitude AS FLOAT64), 4)  AS latitude,
+        ROUND(CAST(longitude AS FLOAT64), 4) AS longitude
+    FROM {{ ref('raw_dohmh') }}
     WHERE camis IS NOT NULL
+      AND latitude IS NOT NULL
+      AND longitude IS NOT NULL
 )
 
 SELECT
@@ -25,6 +29,16 @@ SELECT
     building,
     street,
     zipcode,
-    cuisine_description AS cuisine
+    cuisine_description AS cuisine,
+
+    latitude,
+    longitude,
+
+  
+    TO_HEX(MD5(CONCAT(
+        CAST(latitude AS STRING), '|',
+        CAST(longitude AS STRING)
+    ))) AS location_key
+
 FROM restaurants
 ORDER BY camis, restaurant_name
